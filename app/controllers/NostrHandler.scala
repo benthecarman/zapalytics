@@ -64,20 +64,22 @@ trait NostrHandler extends Logging { self: Controller =>
             // todo may need to do batching
             Try {
               val metadata = Json.parse(event.content).as[Metadata]
-              MetadataDb(
-                user = event.pubkey,
-                lud06 = metadata.lud06.flatMap(LnURL.fromStringOpt),
-                lud16 = metadata.lud16.flatMap(s =>
-                  Try(LightningAddress(s)).toOption),
-                nodeId = None,
-                date = event.created_at
-              )
-            }.toOption
-              .map(
-                metadataDAO
-                  .safeCreate(_)
-                  .map(db => logger.info(s"Saved metadata: ${db.user.hex}"))
-                  .recover(_ => ()))
+              if (metadata.lud06.isDefined || metadata.lud16.isDefined) {
+                Some(
+                  MetadataDb(
+                    user = event.pubkey,
+                    lud06 = metadata.lud06.flatMap(LnURL.fromStringOpt),
+                    lud16 = metadata.lud16.flatMap(s =>
+                      Try(LightningAddress(s)).toOption),
+                    nodeId = None,
+                    date = event.created_at
+                  ))
+              } else None
+            }.toOption.flatten
+              .map(metadataDAO
+                .safeCreate(_)
+                .map(db => logger.info(s"Saved metadata: ${db.user.hex}"))
+                .recover(_ => ()))
               .getOrElse(Future.unit)
           } else Future.unit
         }
