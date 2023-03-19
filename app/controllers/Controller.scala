@@ -38,9 +38,13 @@ class Controller @Inject() (cc: MessagesControllerComponents)
 
   def index: Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
+      val zapStatsF = zapDAO.calcZapStats()
+      val metadataStatsF = metadataDAO.calcMetadataStats()
+
       for {
-        zapStats <- zapDAO.calcZapStats()
-      } yield Ok(views.html.index(zapStats))
+        zapStats <- zapStatsF
+        metadataStats <- metadataStatsF
+      } yield Ok(views.html.index(zapStats, metadataStats))
     }
   }
 

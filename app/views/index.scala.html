@@ -1,9 +1,11 @@
 @import org.bitcoins.core.currency._
-@(stats: ZapStats)(implicit request: MessagesRequestHeader)
+@(stats: ZapStats, metadataStats: MetadataStats)(implicit request: MessagesRequestHeader)
 
 @main("Zapalytics") {
 
     <h2>Zapalytics</h2>
+
+    <h3>Zap Stats</h3>
     <p>
         Total amount zapped: @{stats.totalZapped.satoshis} / @{Bitcoins(stats.totalZapped.satoshis).decimalString} BTC
     </p>
@@ -21,5 +23,28 @@
     </p>
     <p>
         Unique Zap Authors: @stats.uniqueAuthors
+    </p>
+
+    <h3>Metadata Stats</h3>
+    <p>
+        Wallet of Satoshi users: @metadataStats.wos ( @{(metadataStats.wosDominance * 100).toInt}% )
+    </p>
+    <p>
+        Alby users: @metadataStats.alby ( @{(metadataStats.albyDominance * 100).toInt}% )
+    </p>
+    <p>
+        Zebedee users: @metadataStats.zbd ( @{(metadataStats.zbdDominance * 100).toInt}% )
+    </p>
+    <p>
+        Fountain users: @metadataStats.fountain ( @{(metadataStats.zbdDominance * 100).toInt}% )
+    </p>
+    <p>
+        Ln.tips users: @metadataStats.lnTips ( @{(metadataStats.lnTipsDominance * 100).toInt}% )
+    </p>
+    <p>
+        Stacker.news users: @metadataStats.stackerNews ( @{(metadataStats.stackerNewsDominance * 100).toInt}% )
+    </p>
+    <p>
+        Other users: @metadataStats.otherCount ( @{(metadataStats.otherDominance * 100).toInt}% )
     </p>
 }

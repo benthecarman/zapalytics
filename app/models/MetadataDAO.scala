@@ -21,6 +21,29 @@ case class MetadataDb(
     nodeId: Option[NodeId],
     date: Long)
 
+case class MetadataStats(
+    wos: Int,
+    alby: Int,
+    zbd: Int,
+    fountain: Int,
+    lnTips: Int,
+    stackerNews: Int,
+    numUsers: Int
+) {
+  def otherCount = numUsers - wos - alby - zbd - fountain - lnTips - stackerNews
+
+  def wosDominance: Double = wos.toDouble / numUsers.toDouble
+  def albyDominance: Double = alby.toDouble / numUsers.toDouble
+  def zbdDominance: Double = zbd.toDouble / numUsers.toDouble
+  def fountainDominance: Double = fountain.toDouble / numUsers.toDouble
+  def lnTipsDominance: Double = lnTips.toDouble / numUsers.toDouble
+  def stackerNewsDominance: Double = stackerNews.toDouble / numUsers.toDouble
+
+  def otherDominance: Double = {
+    1 - wosDominance - albyDominance - zbdDominance - fountainDominance - lnTipsDominance - stackerNewsDominance
+  }
+}
+
 case class MetadataDAO()(implicit
     override val ec: ExecutionContext,
     override val appConfig: ZapalyticsAppConfig)
@@ -65,6 +88,31 @@ case class MetadataDAO()(implicit
 
   def safeCreate(t: MetadataDb): Future[MetadataDb] = {
     safeDatabase.run(safeCreateAction(t))
+  }
+
+  def calcMetadataStats(): Future[MetadataStats] = {
+    val lnAddrsA = table.filter(_.lud16.isDefined).map(_.lud16.get).result
+
+    val action = for {
+      lnAddrs <- lnAddrsA
+      lower = lnAddrs.map(_.value.toLowerCase)
+    } yield {
+      val wos = lower.count(_.value.contains("@walletofsatoshi.com"))
+      val alby = lower.count(_.value.contains("@getalby.com"))
+      val zbd = lower.count(_.value.contains("@zbd.gg"))
+      val fountain = lower.count(_.value.contains("@fountain.fm"))
+      val lnTips = lower.count(_.value.contains("@ln.tips"))
+      val stackerNews = lower.count(_.value.contains("@stacker.news"))
+      MetadataStats(wos = wos,
+                    alby = alby,
+                    zbd = zbd,
+                    fountain = fountain,
+                    lnTips = lnTips,
+                    stackerNews = stackerNews,
+                    numUsers = lnAddrs.size)
+    }
+
+    safeDatabase.run(action)
   }
 
   class MetadataTable(tag: Tag)
