@@ -87,7 +87,7 @@ case class MetadataDAO()(implicit
 
     val action = for {
       lnAddrs <- lnAddrsA
-      lower = lnAddrs.map(_.value.toLowerCase)
+      lower = lnAddrs.map(_.value.toLowerCase).distinct
     } yield {
       val wos = lower.count(_.value.contains("@walletofsatoshi.com"))
       val alby = lower.count(_.value.contains("@getalby.com"))
@@ -101,7 +101,7 @@ case class MetadataDAO()(implicit
                     fountain = fountain,
                     lnTips = lnTips,
                     stackerNews = stackerNews,
-                    numUsers = lnAddrs.size)
+                    numUsers = lower.size)
     }
 
     safeDatabase.run(action)
