@@ -59,8 +59,7 @@ case class MetadataDAO()(implicit
           table.filter(_.user === t.user).update(t).map(_ => t)
         } else DBIO.successful(existing)
       case None =>
-        table += t
-        DBIO.successful(t)
+        super.createAction(t)
     }
   }
 
