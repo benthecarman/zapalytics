@@ -36,7 +36,7 @@ case class MetadataDAO()(implicit
     MappedColumnType.base[LnURL, String](_.toString, LnURL.fromString)
 
   implicit val lnAddressMapper: BaseColumnType[LightningAddress] =
-    MappedColumnType.base[LightningAddress, String](_.toString,
+    MappedColumnType.base[LightningAddress, String](_.value,
                                                     LightningAddress(_))
 
   override val table: TableQuery[MetadataTable] = TableQuery[MetadataTable]

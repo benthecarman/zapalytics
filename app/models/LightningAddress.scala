@@ -23,6 +23,8 @@ case class LightningAddress(value: String) {
       case _                   => false
     }
   }
+
+  override def toString: String = value
 }
 
 object LightningAddress {
