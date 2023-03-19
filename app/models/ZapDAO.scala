@@ -59,7 +59,12 @@ case class ZapDAO()(implicit
     findByPrimaryKeys(ts.map(_.id))
 
   def getZapStats(): Future[ZapStats] = {
-    val total = table.map(_.amount).sum.getOrElse(MilliSatoshis.zero).result
+    val total = table
+      .map(_.amount)
+      .filter(_ < MilliSatoshis(Bitcoins(2)))
+      .sum
+      .getOrElse(MilliSatoshis.zero)
+      .result
     val count = table.length.result
     val uniqueNodeIds = table.map(_.nodeId).distinct.length.result
     val uniqueUsers = table.map(_.user).distinct.length.result
