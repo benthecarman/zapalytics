@@ -19,6 +19,21 @@ import scala.util.Try
 trait NostrHandler extends Logging { self: Controller =>
 
   def findEvents(startTime: Long, endTime: Long): Future[Unit] = {
+    val filter = NostrFilter(
+      ids = None,
+      authors = None,
+      kinds = Some(Vector(NostrKind.Zap, NostrKind.Metadata)),
+      `#e` = None,
+      `#p` = None,
+      since = Some(startTime),
+      until = Some(endTime),
+      limit = None
+    )
+
+    findEvents(filter)
+  }
+
+  def findEvents(filter: NostrFilter): Future[Unit] = {
     var lastEvent = TimeUtil.currentEpochSecond
 
     val clients = config.nostrRelays.map { relay =>
@@ -89,17 +104,6 @@ trait NostrHandler extends Logging { self: Controller =>
       }
     }
 
-    val filter = NostrFilter(
-      ids = None,
-      authors = None,
-      kinds = Some(Vector(NostrKind.Zap, NostrKind.Metadata)),
-      `#e` = None,
-      `#p` = None,
-      since = Some(startTime),
-      until = Some(endTime),
-      limit = None
-    )
-
     val fs = clients.map { client =>
       for {
         _ <- client.start()
@@ -114,5 +118,24 @@ trait NostrHandler extends Logging { self: Controller =>
     }
 
     Future.sequence(fs).map(_ => logger.info("Done finding events"))
+  }
+
+  def getZapUsers(): Future[Unit] = {
+    zapDAO.getMissingUserKeys().flatMap { keys =>
+      logger.info(s"Missing zap keys: ${keys.size}")
+
+      val filter = NostrFilter(
+        ids = None,
+        authors = Some(keys),
+        kinds = Some(Vector(NostrKind.Metadata)),
+        `#e` = None,
+        `#p` = None,
+        since = None,
+        until = None,
+        limit = None
+      )
+
+      findEvents(filter)
+    }
   }
 }

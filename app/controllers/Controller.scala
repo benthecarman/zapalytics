@@ -51,16 +51,18 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   def reindex(): Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
       startF.flatMap { _ =>
-        val interval = 86400
-        val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
+        getZapUsers().flatMap { _ =>
+          val interval = 86400
+          val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
 
-        FutureUtil
-          .foldLeftAsync((), times) { (_, start) =>
-            val end = start + interval
-            logger.info(s"Finding events for $start to $end")
-            findEvents(start, end)
-          }
-          .map(_ => Ok("Done!"))
+          FutureUtil
+            .foldLeftAsync((), times) { (_, start) =>
+              val end = start + interval
+              logger.info(s"Finding events for $start to $end")
+              findEvents(start, end)
+            }
+            .map(_ => Ok("Done!"))
+        }
       }
     }
   }

@@ -58,6 +58,22 @@ case class ZapDAO()(implicit
       ts: Vector[ZapDb]): Query[ZabTable, ZapDb, Seq] =
     findByPrimaryKeys(ts.map(_.id))
 
+  def uniqueUserKeysAction(): DBIO[Seq[SchnorrPublicKey]] = {
+    table.map(_.user).distinct.result
+  }
+
+  def getMissingUserKeys(): Future[Vector[SchnorrPublicKey]] = {
+    val query = sql"""
+      SELECT DISTINCT z.user
+      FROM zaps z
+      LEFT JOIN metadata m
+      ON z.user = m.user
+      WHERE m.user IS NULL
+    """.as[String]
+
+    safeDatabase.run(query).map(_.map(SchnorrPublicKey.fromHex))
+  }
+
   def calcZapStats(): Future[ZapStats] = {
     val valid = table
       .filter(_.amount < MilliSatoshis(Bitcoins(2)))
