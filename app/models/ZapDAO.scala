@@ -58,7 +58,7 @@ case class ZapDAO()(implicit
       ts: Vector[ZapDb]): Query[ZabTable, ZapDb, Seq] =
     findByPrimaryKeys(ts.map(_.id))
 
-  def getZapStats(): Future[ZapStats] = {
+  def calcZapStats(): Future[ZapStats] = {
     val valid = table
       .filter(_.amount < MilliSatoshis(Bitcoins(2)))
 
