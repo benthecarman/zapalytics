@@ -22,6 +22,17 @@ case class ZapDb(
     amount: MilliSatoshis,
     date: Long)
 
+case class ZapStats(
+    total: MilliSatoshis,
+    count: Int,
+    uniqueNodeIds: Int,
+    uniqueUsers: Int,
+    uniqueAuthors: Int
+) {
+  def totalZapped: CurrencyUnit = Satoshis(total.toLong / 1_000)
+  def averageZapAmount: MilliSatoshis = MilliSatoshis(total.toLong / count)
+}
+
 case class ZapDAO()(implicit
     override val ec: ExecutionContext,
     override val appConfig: ZapalyticsAppConfig)
@@ -46,6 +57,24 @@ case class ZapDAO()(implicit
   override protected def findAll(
       ts: Vector[ZapDb]): Query[ZabTable, ZapDb, Seq] =
     findByPrimaryKeys(ts.map(_.id))
+
+  def getZapStats(): Future[ZapStats] = {
+    val total = table.map(_.amount).sum.getOrElse(MilliSatoshis.zero).result
+    val count = table.length.result
+    val uniqueNodeIds = table.map(_.nodeId).distinct.length.result
+    val uniqueUsers = table.map(_.user).distinct.length.result
+    val uniqueAuthors = table.map(_.author).distinct.length.result
+
+    val action = for {
+      total <- total
+      count <- count
+      uniqueNodeIds <- uniqueNodeIds
+      uniqueUsers <- uniqueUsers
+      uniqueAuthors <- uniqueAuthors
+    } yield ZapStats(total, count, uniqueNodeIds, uniqueUsers, uniqueAuthors)
+
+    safeDatabase.run(action)
+  }
 
   class ZabTable(tag: Tag) extends Table[ZapDb](tag, schemaName, "zaps") {
 

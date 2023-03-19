@@ -1,9 +1,25 @@
-@()(implicit request: MessagesRequestHeader)
+@import org.bitcoins.core.currency._
+@(stats: ZapStats)(implicit request: MessagesRequestHeader)
 
 @main("Zapalytics") {
 
     <h2>Zapalytics</h2>
     <p>
-        A nostr game.
+        Total amount zapped: @{stats.totalZapped.satoshis} / @{Bitcoins(stats.totalZapped.satoshis).decimalString} BTC
+    </p>
+    <p>
+        Zap count: @stats.count
+    </p>
+    <p>
+        Average Zap Amount: @stats.averageZapAmount.toSatoshis
+    </p>
+    <p>
+        Unique LN Nodes Zapped: @stats.uniqueNodeIds
+    </p>
+    <p>
+        Unique Users Zapped: @stats.uniqueUsers
+    </p>
+    <p>
+        Unique Zap Authors: @stats.uniqueAuthors
     </p>
 }

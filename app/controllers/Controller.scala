@@ -30,19 +30,6 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   val zapDAO: ZapDAO = ZapDAO()
   val metadataDAO: MetadataDAO = MetadataDAO()
 
-  startF.map { _ =>
-    val interval = 86400
-    val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
-
-    FutureUtil
-      .foldLeftAsync((), times) { (_, start) =>
-        val end = start + interval
-        logger.info(s"Finding events for $start to $end")
-        findEvents(start, end)
-      }
-      .map(_ => logger.info("Done finding all events"))
-  }
-
   def notFound(route: String): Action[AnyContent] = {
     Action { implicit request: MessagesRequest[AnyContent] =>
       NotFound(views.html.notFound(route))
@@ -50,8 +37,27 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   }
 
   def index: Action[AnyContent] = {
-    Action { implicit request: MessagesRequest[AnyContent] =>
-      Ok(views.html.index())
+    Action.async { implicit request: MessagesRequest[AnyContent] =>
+      for {
+        zapStats <- zapDAO.getZapStats()
+      } yield Ok(views.html.index(zapStats))
+    }
+  }
+
+  def reindex(): Action[AnyContent] = {
+    Action.async { implicit request: MessagesRequest[AnyContent] =>
+      startF.flatMap { _ =>
+        val interval = 86400
+        val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
+
+        FutureUtil
+          .foldLeftAsync((), times) { (_, start) =>
+            val end = start + interval
+            logger.info(s"Finding events for $start to $end")
+            findEvents(start, end)
+          }
+          .map(_ => Ok("Done!"))
+      }
     }
   }
 }
