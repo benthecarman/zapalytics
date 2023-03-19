@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import config.ZapalyticsAppConfig
 import grizzled.slf4j.Logging
 import models._
+import org.bitcoins.core.util.{FutureUtil, TimeUtil}
 import play.api.mvc._
 
 import javax.inject.Inject
@@ -30,8 +31,13 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   val metadataDAO: MetadataDAO = MetadataDAO()
 
   startF.map { _ =>
-    findZaps()
-    findMetadata()
+    val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(86400)
+
+    FutureUtil.foldLeftAsync((), times) { (_, start) =>
+      val end = start + 86400
+      logger.info(s"Finding events for $start to $end")
+      findEvents(start, end)
+    }.map(_ => logger.info("Done finding all events"))
   }
 
   def notFound(route: String): Action[AnyContent] = {

@@ -2,8 +2,10 @@ package controllers
 
 import grizzled.slf4j.Logging
 import models._
+import org.bitcoins.asyncutil.AsyncUtil
 import org.bitcoins.core.protocol.ln.LnInvoice
 import org.bitcoins.core.protocol.ln.currency.MilliSatoshis
+import org.bitcoins.core.util.TimeUtil
 import org.bitcoins.crypto._
 import org.bitcoins.lnurl.LnURL
 import org.scalastr.client.NostrClient
@@ -11,12 +13,15 @@ import org.scalastr.core._
 import play.api.libs.json.Json
 
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
 trait NostrHandler extends Logging {
   self: Controller =>
 
-  def findZaps(): Future[Unit] = {
+  def findEvents(startTime: Long, endTime: Long): Future[Unit] = {
+    var lastEvent = TimeUtil.currentEpochSecond
+
     val clients = config.nostrRelays.map { relay =>
       new NostrClient(relay, None) {
 
@@ -25,6 +30,7 @@ trait NostrHandler extends Logging {
         override def processEvent(
             subscriptionId: String,
             event: NostrEvent): Future[Unit] = {
+          lastEvent = TimeUtil.currentEpochSecond
           if (event.kind == NostrKind.Zap) {
             // todo may need to do batching
             Try {
@@ -55,47 +61,7 @@ trait NostrHandler extends Logging {
                 .map(db => logger.info(s"Saved zap: ${db.id.hex}"))
                 .recover(_ => ()))
               .getOrElse(Future.unit)
-          } else Future.unit
-        }
-
-        override def processNotice(notice: String): Future[Unit] =
-          Future.unit
-      }
-    }
-
-    val filter = NostrFilter(
-      ids = None,
-      authors = None,
-      kinds = Some(Vector(NostrKind.Zap)),
-      `#e` = None,
-      `#p` = None,
-      since = None,
-      until = None,
-      limit = None
-    )
-
-    val fs = clients.map { client =>
-      for {
-        _ <- client.start()
-        _ <- client.subscribe(filter)
-        _ = logger.info(s"Subscribed to ${client.url}")
-        _ <- client.shutdownPOpt.get.future
-      } yield ()
-    }
-
-    Future.sequence(fs).map(_ => logger.info("Done finding zaps"))
-  }
-
-  def findMetadata(): Future[Unit] = {
-    val clients = config.nostrRelays.map { relay =>
-      new NostrClient(relay, None) {
-
-        override def unsubOnEOSE: Boolean = true
-
-        override def processEvent(
-            subscriptionId: String,
-            event: NostrEvent): Future[Unit] = {
-          if (event.kind == NostrKind.Metadata) {
+          } else if (event.kind == NostrKind.Metadata) {
             // todo may need to do batching
             Try {
               val metadata = Json.parse(event.content).as[Metadata]
@@ -125,11 +91,11 @@ trait NostrHandler extends Logging {
     val filter = NostrFilter(
       ids = None,
       authors = None,
-      kinds = Some(Vector(NostrKind.Metadata)),
+      kinds = Some(Vector(NostrKind.Zap, NostrKind.Metadata)),
       `#e` = None,
       `#p` = None,
-      since = None,
-      until = None,
+      since = Some(startTime),
+      until = Some(endTime),
       limit = None
     )
 
@@ -138,10 +104,14 @@ trait NostrHandler extends Logging {
         _ <- client.start()
         _ <- client.subscribe(filter)
         _ = logger.info(s"Subscribed to ${client.url}")
-        _ <- client.shutdownPOpt.get.future
+        _ <- AsyncUtil.awaitCondition(
+          () => lastEvent < TimeUtil.currentEpochSecond - 3,
+          interval = 1.second,
+          maxTries = 500)
+        _ <- Future.fromTry(Try(client.stop())).flatten.recover(_ => ())
       } yield ()
     }
 
-    Future.sequence(fs).map(_ => logger.info("Done finding metadata"))
+    Future.sequence(fs).map(_ => logger.info("Done finding events"))
   }
 }
