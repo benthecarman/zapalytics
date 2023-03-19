@@ -125,7 +125,7 @@ trait NostrHandler extends Logging {
     val filter = NostrFilter(
       ids = None,
       authors = None,
-      kinds = Some(Vector(NostrKind.Zap)),
+      kinds = Some(Vector(NostrKind.Metadata)),
       `#e` = None,
       `#p` = None,
       since = None,
