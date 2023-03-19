@@ -52,6 +52,22 @@ case class MetadataDAO()(implicit
       ts: Vector[MetadataDb]): Query[MetadataTable, MetadataDb, Seq] =
     findByPrimaryKeys(ts.map(_.user))
 
+  def safeCreateAction(t: MetadataDb): DBIO[MetadataDb] = {
+    table.filter(_.user === t.user).result.headOption.flatMap {
+      case Some(existing) =>
+        if (t.date > existing.date) {
+          table.filter(_.user === t.user).update(t).map(_ => t)
+        } else DBIO.successful(existing)
+      case None =>
+        table += t
+        DBIO.successful(t)
+    }
+  }
+
+  def safeCreate(t: MetadataDb): Future[MetadataDb] = {
+    safeDatabase.run(safeCreateAction(t))
+  }
+
   class MetadataTable(tag: Tag)
       extends Table[MetadataDb](tag, schemaName, "metadata") {
 

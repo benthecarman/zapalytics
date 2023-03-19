@@ -110,7 +110,7 @@ trait NostrHandler extends Logging {
             }.toOption
               .map(
                 metadataDAO
-                  .create(_)
+                  .safeCreate(_)
                   .map(db => logger.info(s"Saved metadata: ${db.user.hex}"))
                   .recover(_ => ()))
               .getOrElse(Future.unit)
