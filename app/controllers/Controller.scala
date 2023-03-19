@@ -33,11 +33,13 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   startF.map { _ =>
     val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(86400)
 
-    FutureUtil.foldLeftAsync((), times) { (_, start) =>
-      val end = start + 86400
-      logger.info(s"Finding events for $start to $end")
-      findEvents(start, end)
-    }.map(_ => logger.info("Done finding all events"))
+    FutureUtil
+      .foldLeftAsync((), times) { (_, start) =>
+        val end = start + 86400
+        logger.info(s"Finding events for $start to $end")
+        findEvents(start, end)
+      }
+      .map(_ => logger.info("Done finding all events"))
   }
 
   def notFound(route: String): Action[AnyContent] = {

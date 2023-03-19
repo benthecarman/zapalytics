@@ -16,8 +16,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
-trait NostrHandler extends Logging {
-  self: Controller =>
+trait NostrHandler extends Logging { self: Controller =>
 
   def findEvents(startTime: Long, endTime: Long): Future[Unit] = {
     var lastEvent = TimeUtil.currentEpochSecond
