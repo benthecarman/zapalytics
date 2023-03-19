@@ -5,7 +5,7 @@ import models._
 import org.bitcoins.asyncutil.AsyncUtil
 import org.bitcoins.core.protocol.ln.LnInvoice
 import org.bitcoins.core.protocol.ln.currency.MilliSatoshis
-import org.bitcoins.core.util.TimeUtil
+import org.bitcoins.core.util.{FutureUtil, TimeUtil}
 import org.bitcoins.crypto._
 import org.bitcoins.lnurl.LnURL
 import org.scalastr.client.NostrClient
@@ -121,21 +121,30 @@ trait NostrHandler extends Logging { self: Controller =>
   }
 
   def getZapUsers(): Future[Unit] = {
-    zapDAO.getMissingUserKeys().flatMap { keys =>
-      logger.info(s"Missing zap keys: ${keys.size}")
+    zapDAO
+      .getMissingUserKeys()
+      .flatMap { keys =>
+        logger.info(s"Missing zap keys: ${keys.size}")
 
-      val filter = NostrFilter(
-        ids = None,
-        authors = Some(keys),
-        kinds = Some(Vector(NostrKind.Metadata)),
-        `#e` = None,
-        `#p` = None,
-        since = None,
-        until = None,
-        limit = None
-      )
+        FutureUtil.batchAndSyncExecute(
+          keys,
+          { k: Vector[SchnorrPublicKey] =>
+            val filter = NostrFilter(
+              ids = None,
+              authors = Some(k),
+              kinds = Some(Vector(NostrKind.Metadata)),
+              `#e` = None,
+              `#p` = None,
+              since = None,
+              until = None,
+              limit = None
+            )
 
-      findEvents(filter)
-    }
+            findEvents(filter).map(_ => Vector.empty)
+          },
+          100
+        )
+      }
+      .map(_ => ())
   }
 }
