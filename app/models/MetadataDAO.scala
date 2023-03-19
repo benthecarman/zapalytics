@@ -32,16 +32,8 @@ case class MetadataStats(
 ) {
   def otherCount = numUsers - wos - alby - zbd - fountain - lnTips - stackerNews
 
-  def wosDominance: Double = wos.toDouble / numUsers.toDouble
-  def albyDominance: Double = alby.toDouble / numUsers.toDouble
-  def zbdDominance: Double = zbd.toDouble / numUsers.toDouble
-  def fountainDominance: Double = fountain.toDouble / numUsers.toDouble
-  def lnTipsDominance: Double = lnTips.toDouble / numUsers.toDouble
-  def stackerNewsDominance: Double = stackerNews.toDouble / numUsers.toDouble
-
-  def otherDominance: Double = {
-    1 - wosDominance - albyDominance - zbdDominance - fountainDominance - lnTipsDominance - stackerNewsDominance
-  }
+  def pieChartUrl: String =
+    s"https://quickchart.io/chart?chart={type:'pie',data:{labels:['WoS','Alby','Zebedee','Fountain','Ln.tips','stacker.news','Others'],datasets:[{label:'Count',data:[$wos,$alby,$zbd,$fountain,$lnTips,$stackerNews,$otherCount]}]}}&backgroundColor=white&width=1000&height=600&format=png&version=2.9.3"
 }
 
 case class MetadataDAO()(implicit
