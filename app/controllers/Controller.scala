@@ -31,11 +31,12 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   val metadataDAO: MetadataDAO = MetadataDAO()
 
   startF.map { _ =>
-    val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(86400)
+    val interval = 86400
+    val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
 
     FutureUtil
       .foldLeftAsync((), times) { (_, start) =>
-        val end = start + 86400
+        val end = start + interval
         logger.info(s"Finding events for $start to $end")
         findEvents(start, end)
       }
