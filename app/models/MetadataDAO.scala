@@ -28,12 +28,18 @@ case class MetadataStats(
     fountain: Int,
     lnTips: Int,
     stackerNews: Int,
+    bottlePay: Int,
+    coinCorner: Int,
+    strikeArmy: Int,
+    vida: Int,
     numUsers: Int
 ) {
-  def otherCount = numUsers - wos - alby - zbd - fountain - lnTips - stackerNews
+
+  def otherCount =
+    numUsers - wos - alby - zbd - fountain - lnTips - stackerNews - bottlePay - coinCorner - strikeArmy - vida
 
   def pieChartUrl: String =
-    s"https://quickchart.io/chart?chart={type:'pie',data:{labels:['WoS','Alby','Zebedee','Fountain','Ln.tips','stacker.news','Others'],datasets:[{label:'Count',data:[$wos,$alby,$zbd,$fountain,$lnTips,$stackerNews,$otherCount]}]}}&backgroundColor=white&width=1000&height=600&format=png&version=2.9.3"
+    s"https://quickchart.io/chart?chart={type:'pie',data:{labels:['WoS','Alby','Zebedee','Fountain','Ln.tips','stacker.news','BottlePay','CoinCorner','strike.army','vida','Others'],datasets:[{label:'Count',data:[$wos,$alby,$zbd,$fountain,$lnTips,$stackerNews,$bottlePay,$coinCorner,$strikeArmy,$vida,$otherCount]}]}}&backgroundColor=white&width=1000&height=600&format=png&version=2.9.3"
 }
 
 case class MetadataDAO()(implicit
@@ -95,13 +101,24 @@ case class MetadataDAO()(implicit
       val fountain = lower.count(_.value.contains("@fountain.fm"))
       val lnTips = lower.count(_.value.contains("@ln.tips"))
       val stackerNews = lower.count(_.value.contains("@stacker.news"))
-      MetadataStats(wos = wos,
-                    alby = alby,
-                    zbd = zbd,
-                    fountain = fountain,
-                    lnTips = lnTips,
-                    stackerNews = stackerNews,
-                    numUsers = lower.size)
+      val bottlePay = lower.count(_.value.contains("@bottlepay.me"))
+      val coinCorner = lower.count(_.value.contains("@coincorner.io"))
+      val strikeArmy = lower.count(_.value.contains("@strike.army"))
+      val vida = lower.count(_.value.contains("@vida.live"))
+
+      MetadataStats(
+        wos = wos,
+        alby = alby,
+        zbd = zbd,
+        fountain = fountain,
+        lnTips = lnTips,
+        stackerNews = stackerNews,
+        bottlePay = bottlePay,
+        coinCorner = coinCorner,
+        strikeArmy = strikeArmy,
+        vida = vida,
+        numUsers = lower.size
+      )
     }
 
     safeDatabase.run(action)
