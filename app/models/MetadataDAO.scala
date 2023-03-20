@@ -1,6 +1,7 @@
 package models
 
 import config.ZapalyticsAppConfig
+import controllers.Utils
 import org.bitcoins.core.currency._
 import org.bitcoins.core.protocol.ln.LnInvoice
 import org.bitcoins.core.protocol.ln.currency.MilliSatoshis
@@ -13,6 +14,7 @@ import play.api.libs.json.Json
 import slick.lifted.ProvenShape
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.math.BigDecimal.RoundingMode
 
 case class MetadataDb(
     user: SchnorrPublicKey,
@@ -22,24 +24,16 @@ case class MetadataDb(
     date: Long)
 
 case class MetadataStats(
-    wos: Int,
-    alby: Int,
-    zbd: Int,
-    fountain: Int,
-    lnTips: Int,
-    stackerNews: Int,
-    bottlePay: Int,
-    coinCorner: Int,
-    strikeArmy: Int,
-    vida: Int,
-    numUsers: Int
+    domainCounts: Seq[(String, Int)]
 ) {
+  def totalUsers: Int = domainCounts.map(_._2).sum
 
-  def otherCount =
-    numUsers - wos - alby - zbd - fountain - lnTips - stackerNews - bottlePay - coinCorner - strikeArmy - vida
-
-  def pieChartUrl: String =
-    s"https://quickchart.io/chart?chart={type:'pie',data:{labels:['WoS','Alby','Zebedee','Fountain','Ln.tips','stacker.news','BottlePay','CoinCorner','strike.army','vida','Others'],datasets:[{label:'Count',data:[$wos,$alby,$zbd,$fountain,$lnTips,$stackerNews,$bottlePay,$coinCorner,$strikeArmy,$vida,$otherCount]}]}}&backgroundColor=white&width=1000&height=600&format=png&version=2.9.3"
+  def percentCustodial: BigDecimal = BigDecimal(
+    (domainCounts
+      .filter(t => Utils.isCustodial(t._1))
+      .map(_._2)
+      .sum
+      .toDouble / totalUsers) * 100).setScale(2, RoundingMode.HALF_DOWN)
 }
 
 case class MetadataDAO()(implicit
@@ -95,30 +89,18 @@ case class MetadataDAO()(implicit
       lnAddrs <- lnAddrsA
       lower = lnAddrs.map(_.value.toLowerCase).distinct
     } yield {
-      val wos = lower.count(_.value.contains("@walletofsatoshi.com"))
-      val alby = lower.count(_.value.contains("@getalby.com"))
-      val zbd = lower.count(_.value.contains("@zbd.gg"))
-      val fountain = lower.count(_.value.contains("@fountain.fm"))
-      val lnTips = lower.count(_.value.contains("@ln.tips"))
-      val stackerNews = lower.count(_.value.contains("@stacker.news"))
-      val bottlePay = lower.count(_.value.contains("@bottlepay.me"))
-      val coinCorner = lower.count(_.value.contains("@coincorner.io"))
-      val strikeArmy = lower.count(_.value.contains("@strike.army"))
-      val vida = lower.count(_.value.contains("@vida.live"))
+      val domains = lower.flatMap { s =>
+        s.split('@').lastOption
+      }
 
-      MetadataStats(
-        wos = wos,
-        alby = alby,
-        zbd = zbd,
-        fountain = fountain,
-        lnTips = lnTips,
-        stackerNews = stackerNews,
-        bottlePay = bottlePay,
-        coinCorner = coinCorner,
-        strikeArmy = strikeArmy,
-        vida = vida,
-        numUsers = lower.size
-      )
+      val domainCounts = domains
+        .groupBy(identity)
+        .view
+        .mapValues(_.size)
+        .toSeq
+        .sortBy(_._2)(Ordering[Int].reverse)
+
+      MetadataStats(domainCounts)
     }
 
     safeDatabase.run(action)

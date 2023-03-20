@@ -29,7 +29,7 @@ case class ZapStats(
     uniqueUsers: Int,
     uniqueAuthors: Int
 ) {
-  def totalZapped: CurrencyUnit = Satoshis(total.toLong / 1_000)
+  def totalZapped: Satoshis = total.toSatoshis
   def averageZapAmount: MilliSatoshis = MilliSatoshis(total.toLong / count)
 }
 

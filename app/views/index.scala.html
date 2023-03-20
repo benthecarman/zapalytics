@@ -1,31 +1,64 @@
 @import org.bitcoins.core.currency._
 @(stats: ZapStats, metadataStats: MetadataStats)(implicit request: MessagesRequestHeader)
 
-@main("Zapalytics") {
+    @main("Zapalytics") {
 
-    <h2>Zapalytics</h2>
+        <head>
+            <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+            <script type="text/javascript">
+                    google.charts.load('current', {'packages': ['corechart']});
+                    google.charts.setOnLoadCallback(drawChart);
 
-    <h3>Zap Stats</h3>
-    <p>
-        Total amount zapped: @{stats.totalZapped.satoshis} / @{Bitcoins(stats.totalZapped.satoshis).decimalString} BTC
-    </p>
-    <p>
-        Zap count: @stats.count
-    </p>
-    <p>
-        Average Zap Amount: @stats.averageZapAmount.toSatoshis
-    </p>
-    <p>
-        Unique LN Nodes Zapped: @stats.uniqueNodeIds
-    </p>
-    <p>
-        Unique Users Zapped: @stats.uniqueUsers
-    </p>
-    <p>
-        Unique Zap Authors: @stats.uniqueAuthors
-    </p>
+                    function drawChart() {
 
-    <h3>Metadata Stats</h3>
+                        const data = google.visualization.arrayToDataTable([
+                            ['Provider', 'Number of users'],
+                            @for((domain, count) <- metadataStats.domainCounts) {
+                                ['@domain', @count],
+                            }
+                        ]);
 
-    <img id='pieChart' src="@{metadataStats.pieChartUrl}" alt="" title="pieChart" width="1000" height="600" />
-}
+                        const options = {
+                            title: 'Lightning Addresses (@{metadataStats.percentCustodial}% custodial)',
+                            sliceVisibilityThreshold: 0.005
+                        };
+
+                        const chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+                        chart.draw(data, options);
+                    }
+            </script>
+        </head>
+
+        <h2>Zapalytics</h2>
+
+        <h3>Zap Stats</h3>
+        <p>
+            Total amount zapped: @{
+            stats.totalZapped.satoshis
+        } / @{
+            Bitcoins(stats.totalZapped.satoshis).decimalString
+        } BTC
+        </p>
+        <p>
+            Zap count: @stats.count
+        </p>
+        <p>
+            Average Zap Amount: @stats.averageZapAmount.toSatoshis
+        </p>
+        <p>
+            Unique LN Nodes Zapped: @stats.uniqueNodeIds
+        </p>
+        <p>
+            Unique Users Zapped: @stats.uniqueUsers
+        </p>
+        <p>
+            Unique Zap Authors: @stats.uniqueAuthors
+        </p>
+
+        <h3>Metadata Stats</h3>
+
+        <div id="piechart" style="width: 900px;
+            height: 500px;"></div>
+        @* <img id='pieChart' src="@{metadataStats.pieChartUrl}" alt="" title="pieChart" width="1000" height="600" />*@
+    }

@@ -1,4 +1,4 @@
-val bitcoinsV = "1.9.7-87-915af37a-SNAPSHOT"
+val bitcoinsV = "1.9.7-105-84803fdf-SNAPSHOT"
 val scalastrV = "0.0.0-68-e0fc5343-SNAPSHOT"
 val akkaV = "2.6.20"
 
