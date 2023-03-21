@@ -1,6 +1,7 @@
 package models
 
 import config.ZapalyticsAppConfig
+import controllers.Utils
 import org.bitcoins.core.currency._
 import org.bitcoins.core.protocol.ln.LnInvoice
 import org.bitcoins.core.protocol.ln.currency.MilliSatoshis
@@ -12,6 +13,7 @@ import play.api.libs.json.Json
 import slick.lifted.ProvenShape
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.math.BigDecimal.RoundingMode
 
 case class ZapDb(
     id: Sha256Digest,
@@ -27,9 +29,20 @@ case class ZapStats(
     count: Int,
     uniqueNodeIds: Int,
     uniqueUsers: Int,
-    uniqueAuthors: Int
+    uniqueAuthors: Int,
+    zapsByAuthor: Seq[(SchnorrPublicKey, MilliSatoshis)]
 ) {
-  def totalZapped: Satoshis = total.toSatoshis
+
+  def custodialZaps: MilliSatoshis = {
+    MilliSatoshis(zapsByAuthor.map { case (author, amt) =>
+      if (Utils.isCustodial(author)) amt.toLong else 0
+    }.sum)
+  }
+
+  def percentCustodial: BigDecimal =
+    BigDecimal((custodialZaps.toLong.toDouble / total.toLong) * 100)
+      .setScale(2, RoundingMode.HALF_DOWN)
+
   def averageZapAmount: MilliSatoshis = MilliSatoshis(total.toLong / count)
 }
 
@@ -58,10 +71,6 @@ case class ZapDAO()(implicit
       ts: Vector[ZapDb]): Query[ZabTable, ZapDb, Seq] =
     findByPrimaryKeys(ts.map(_.id))
 
-  def uniqueUserKeysAction(): DBIO[Seq[SchnorrPublicKey]] = {
-    table.map(_.user).distinct.result
-  }
-
   def getMissingUserKeys(): Future[Vector[SchnorrPublicKey]] = {
     val query = sql"""
       SELECT DISTINCT z.user
@@ -75,12 +84,20 @@ case class ZapDAO()(implicit
   }
 
   def calcZapStats(): Future[ZapStats] = {
-    val valid = table
-      .filter(_.amount < MilliSatoshis(Bitcoins(2)))
+    val maxZap = MilliSatoshis(Bitcoins(1))
+    val fakers = Seq(
+      SchnorrPublicKey(
+        "0827e302f2e1addb2ab7f56a15bbbc63ad8c4dbea72a054dffeb1d6a20557daa"),
+      SchnorrPublicKey(
+        "738ea36ef74b2ac80bfb3887b40637c7dcdf74ea6eed73c718b7193313b90f9b")
+    )
 
-    val total = table
+    val valid = table
+      .filter(_.amount < maxZap)
+      .filterNot(_.author.inSet(fakers))
+
+    val total = valid
       .map(_.amount)
-      .filter(_ < MilliSatoshis(Bitcoins(2)))
       .sum
       .getOrElse(MilliSatoshis.zero)
       .result
@@ -89,13 +106,26 @@ case class ZapDAO()(implicit
     val uniqueUsers = valid.map(_.user).distinct.length.result
     val uniqueAuthors = valid.map(_.author).distinct.length.result
 
+    val zapsByAuthorA = valid
+      .groupBy(_.author)
+      .map { case (author, zaps) =>
+        (author, zaps.map(_.amount).sum.getOrElse(MilliSatoshis.zero))
+      }
+      .result
+
     val action = for {
       total <- total
       count <- count
       uniqueNodeIds <- uniqueNodeIds
       uniqueUsers <- uniqueUsers
       uniqueAuthors <- uniqueAuthors
-    } yield ZapStats(total, count, uniqueNodeIds, uniqueUsers, uniqueAuthors)
+      zapsByAuthor <- zapsByAuthorA
+    } yield ZapStats(total,
+                     count,
+                     uniqueNodeIds,
+                     uniqueUsers,
+                     uniqueAuthors,
+                     zapsByAuthor.sortBy(_._2)(Ordering[MilliSatoshis].reverse))
 
     safeDatabase.run(action)
   }
