@@ -58,11 +58,21 @@ trait NostrHandler extends Logging { self: Controller =>
                 .get
                 .value(1)
                 .as[String]
+
+              val description = event.tags
+                .find(_.value.head.asOpt[String].contains("description"))
+                .get
+                .value(1)
+                .as[String]
+
+              val sender = Json.parse(description).as[NostrEvent].pubkey
+
               val invoice = LnInvoice.fromString(invoiceStr)
               ZapDb(
                 id = event.id,
                 author = event.pubkey,
                 user = SchnorrPublicKey(user),
+                sender = Some(sender),
                 invoice = invoice,
                 nodeId = invoice.nodeId,
                 amount =
@@ -71,7 +81,7 @@ trait NostrHandler extends Logging { self: Controller =>
               )
             }.toOption
               .map(zapDAO
-                .create(_)
+                .upsert(_)
                 .map(db => logger.info(s"Saved zap: ${db.id.hex}"))
                 .recover(_ => ()))
               .getOrElse(Future.unit)
@@ -133,6 +143,62 @@ trait NostrHandler extends Logging { self: Controller =>
               ids = None,
               authors = Some(k),
               kinds = Some(Vector(NostrKind.Metadata)),
+              `#e` = None,
+              `#p` = None,
+              since = None,
+              until = None,
+              limit = None
+            )
+
+            findEvents(filter).map(_ => Vector.empty)
+          },
+          100
+        )
+      }
+      .map(_ => ())
+  }
+
+  def getZapSenders(): Future[Unit] = {
+    zapDAO
+      .getMissingSenderKeys()
+      .flatMap { keys =>
+        logger.info(s"Missing zap keys: ${keys.size}")
+
+        FutureUtil.batchAndSyncExecute(
+          keys,
+          { k: Vector[SchnorrPublicKey] =>
+            val filter = NostrFilter(
+              ids = None,
+              authors = Some(k),
+              kinds = Some(Vector(NostrKind.Metadata)),
+              `#e` = None,
+              `#p` = None,
+              since = None,
+              until = None,
+              limit = None
+            )
+
+            findEvents(filter).map(_ => Vector.empty)
+          },
+          100
+        )
+      }
+      .map(_ => ())
+  }
+
+  def getZapsWithMissingSenders(): Future[Unit] = {
+    zapDAO
+      .getZapsWithNoSender()
+      .flatMap { ids =>
+        logger.info(s"Missing zap senders: ${ids.size}")
+
+        FutureUtil.batchAndSyncExecute(
+          ids,
+          { k: Vector[Sha256Digest] =>
+            val filter = NostrFilter(
+              ids = Some(k),
+              authors = None,
+              kinds = Some(Vector(NostrKind.Zap)),
               `#e` = None,
               `#p` = None,
               since = None,

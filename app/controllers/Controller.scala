@@ -53,7 +53,13 @@ class Controller @Inject() (cc: MessagesControllerComponents)
 
   private def doReindex(): Future[Unit] = {
     logger.info("Starting reindex")
-    getZapUsers().flatMap { _ =>
+    val missingF = for {
+      _ <- getZapUsers()
+      _ <- getZapSenders()
+      _ <- getZapsWithMissingSenders()
+    } yield ()
+
+    missingF.flatMap { _ =>
       val interval = 86400
       val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
 

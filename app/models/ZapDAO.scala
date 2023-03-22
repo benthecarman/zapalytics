@@ -8,8 +8,6 @@ import org.bitcoins.core.protocol.ln.currency.MilliSatoshis
 import org.bitcoins.core.protocol.ln.node.NodeId
 import org.bitcoins.crypto._
 import org.bitcoins.db.{CRUD, DbCommonsColumnMappers, SlickUtil}
-import org.scalastr.core.{NostrEvent, NostrNoteId}
-import play.api.libs.json.Json
 import slick.lifted.ProvenShape
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -19,6 +17,7 @@ case class ZapDb(
     id: Sha256Digest,
     author: SchnorrPublicKey,
     user: SchnorrPublicKey,
+    sender: Option[SchnorrPublicKey],
     invoice: LnInvoice,
     nodeId: NodeId,
     amount: MilliSatoshis,
@@ -83,6 +82,24 @@ case class ZapDAO()(implicit
     safeDatabase.run(query).map(_.map(SchnorrPublicKey.fromHex))
   }
 
+  def getMissingSenderKeys(): Future[Vector[SchnorrPublicKey]] = {
+    val query = sql"""
+      SELECT DISTINCT z.sender
+      FROM zaps z
+      LEFT JOIN metadata m
+      ON z.sender = m.user
+      WHERE z.sender IS NOT NULL
+      AND m.user IS NULL
+    """.as[String]
+
+    safeDatabase.run(query).map(_.map(SchnorrPublicKey.fromHex))
+  }
+
+  def getZapsWithNoSender(): Future[Vector[Sha256Digest]] = {
+    val query = table.filter(_.sender.isEmpty).map(_.id).result
+    safeDatabase.runVec(query)
+  }
+
   def calcZapStats(): Future[ZapStats] = {
     val maxZap = MilliSatoshis(Bitcoins(1))
     val fakers = Seq(
@@ -138,6 +155,8 @@ case class ZapDAO()(implicit
 
     def user: Rep[SchnorrPublicKey] = column("user")
 
+    def sender: Rep[Option[SchnorrPublicKey]] = column("sender")
+
     def invoice: Rep[LnInvoice] = column("invoice")
 
     def nodeId: Rep[NodeId] = column("node_id")
@@ -147,7 +166,8 @@ case class ZapDAO()(implicit
     def date: Rep[Long] = column("date")
 
     def * : ProvenShape[ZapDb] =
-      (id, author, user, invoice, nodeId, amount, date).<>(ZapDb.tupled,
-                                                           ZapDb.unapply)
+      (id, author, user, sender, invoice, nodeId, amount, date).<>(
+        ZapDb.tupled,
+        ZapDb.unapply)
   }
 }

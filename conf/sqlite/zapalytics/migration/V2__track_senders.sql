@@ -1,0 +1,2 @@
+ALTER TABLE zaps
+    ADD COLUMN sender TEXT;
