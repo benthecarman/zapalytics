@@ -21,8 +21,15 @@
 
                     const options = {
                         title: 'Zaps By Event Author (@{stats.percentCustodial}% custodial)',
-                        sliceVisibilityThreshold: 0.005
-                    };
+                        sliceVisibilityThreshold: 0.005,
+                        backgroundColor: '#222',
+                        titleTextStyle: { color: '#fff'},
+                        legend: {
+                            textStyle: {
+                                color: '#fff'
+                            }
+                        },
+                    }
 
                     const chart = new google.visualization.PieChart(document.getElementById('zapsPieChart'));
 
@@ -39,8 +46,15 @@
 
                     const options = {
                         title: 'Lightning Addresses (@{metadataStats.percentCustodial}% custodial)',
-                        sliceVisibilityThreshold: 0.005
-                    };
+                        sliceVisibilityThreshold: 0.005,
+                        backgroundColor: '#222',
+                        titleTextStyle: { color: '#fff'},
+                        legend: {
+                            textStyle: {
+                                color: '#fff'
+                            }
+                        },
+                    }
 
                     const chart = new google.visualization.PieChart(document.getElementById('metadataPieChart'));
 
