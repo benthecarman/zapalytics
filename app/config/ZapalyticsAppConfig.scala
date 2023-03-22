@@ -45,6 +45,10 @@ case class ZapalyticsAppConfig(
     } else Vector.empty
   }
 
+  lazy val adminKey: String = {
+    config.getString(s"admin.key")
+  }
+
   override def start(): Future[Unit] = {
     logger.info(s"Initializing setup")
 

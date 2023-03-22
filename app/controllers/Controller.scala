@@ -67,12 +67,15 @@ class Controller @Inject() (cc: MessagesControllerComponents)
     }
   }
 
-  def reindex(): Action[AnyContent] = {
+  def reindex(key: String): Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
-      startF.flatMap { _ =>
-        val _ = doReindex()
-        Future.successful(Ok("Reindexing started"))
-      }
+      if (key != config.adminKey) {
+        Future.successful(Forbidden("Invalid admin key"))
+      } else
+        startF.flatMap { _ =>
+          val _ = doReindex()
+          Future.successful(Ok("Reindexing started"))
+        }
     }
   }
 

@@ -4,7 +4,7 @@
 
 # Home page
 GET         /                    controllers.Controller.index()
-GET         /reindex             controllers.Controller.reindex()
+GET         /reindex             controllers.Controller.reindex(key)
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)
 
