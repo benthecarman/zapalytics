@@ -7,8 +7,11 @@ import models._
 import org.bitcoins.core.util.{FutureUtil, TimeUtil}
 import play.api.mvc._
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import scala.concurrent._
+import scala.concurrent.duration._
 
 class Controller @Inject() (cc: MessagesControllerComponents)
     extends MessagesAbstractController(cc)
@@ -48,22 +51,59 @@ class Controller @Inject() (cc: MessagesControllerComponents)
     }
   }
 
+  private def doReindex(): Future[Unit] = {
+    logger.info("Starting reindex")
+    getZapUsers().flatMap { _ =>
+      val interval = 86400
+      val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
+
+      FutureUtil
+        .foldLeftAsync((), times) { (_, start) =>
+          val end = start + interval
+          logger.info(s"Finding events for $start to $end")
+          findEvents(start, end)
+        }
+        .map(_ => ())
+    }
+  }
+
   def reindex(): Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
       startF.flatMap { _ =>
-        getZapUsers().flatMap { _ =>
-          val interval = 86400
-          val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
-
-          FutureUtil
-            .foldLeftAsync((), times) { (_, start) =>
-              val end = start + interval
-              logger.info(s"Finding events for $start to $end")
-              findEvents(start, end)
-            }
-            .map(_ => Ok("Done!"))
-        }
+        val _ = doReindex()
+        Future.successful(Ok("Reindexing started"))
       }
+    }
+  }
+
+  private def calcNextReindexTime(): Instant = {
+    val now = Instant.now()
+    val eightUTCToday = now
+      .truncatedTo(ChronoUnit.DAYS)
+      .plus(8, ChronoUnit.HOURS)
+    if (now.isAfter(eightUTCToday)) {
+      // need to get tomorrows settlement
+      eightUTCToday.plus(1, ChronoUnit.DAYS)
+    } else {
+      eightUTCToday
+    }
+  }
+
+  private def durationUntilNextReindex(): FiniteDuration = {
+    val time = calcNextReindexTime()
+    val now = Instant.now().toEpochMilli
+    time
+      .minusMillis(now)
+      .toEpochMilli
+      .milliseconds
+  }
+
+  // every day reindex the data
+  startF.map { _ =>
+    val initDelay = durationUntilNextReindex()
+    val interval = 1.day
+    system.scheduler.scheduleAtFixedRate(initDelay, interval) { () =>
+      val _ = doReindex()
     }
   }
 }
