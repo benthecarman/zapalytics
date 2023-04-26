@@ -27,7 +27,8 @@ case class ZapStats(
     total: MilliSatoshis,
     count: Int,
     uniqueNodeIds: Int,
-    uniqueUsers: Int,
+    uniqueReceivers: Int,
+    uniqueSenders: Int,
     uniqueAuthors: Int,
     zapsByAuthor: Seq[(SchnorrPublicKey, MilliSatoshis)]
 ) {
@@ -120,7 +121,8 @@ case class ZapDAO()(implicit
       .result
     val count = valid.length.result
     val uniqueNodeIds = valid.map(_.nodeId).distinct.length.result
-    val uniqueUsers = valid.map(_.user).distinct.length.result
+    val uniqueReceivers = valid.map(_.user).distinct.length.result
+    val uniqueSenders = valid.map(_.sender).distinct.length.result
     val uniqueAuthors = valid.map(_.author).distinct.length.result
 
     val zapsByAuthorA = valid
@@ -134,13 +136,15 @@ case class ZapDAO()(implicit
       total <- total
       count <- count
       uniqueNodeIds <- uniqueNodeIds
-      uniqueUsers <- uniqueUsers
+      uniqueReceivers <- uniqueReceivers
+      uniqueSenders <- uniqueSenders
       uniqueAuthors <- uniqueAuthors
       zapsByAuthor <- zapsByAuthorA
     } yield ZapStats(total,
                      count,
                      uniqueNodeIds,
-                     uniqueUsers,
+                     uniqueReceivers,
+                     uniqueSenders,
                      uniqueAuthors,
                      zapsByAuthor.sortBy(_._2)(Ordering[MilliSatoshis].reverse))
 
