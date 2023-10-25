@@ -106,6 +106,10 @@ object Utils {
 
   def getAuthorName(key: SchnorrPublicKey): String = {
     key.hex match {
+      case "1743bcc6d80fc182ced1971853769ff9373a2707aad744b24e8577c6dae83fd0" =>
+        "ZapMe.tips"
+      case "abd32a8bc530142cc04a23f9c07239dbbc6664f4f7eeceb8092c0e3530f94e9d" =>
+        "ZeusPay"
       case "0827e302f2e1addb2ab7f56a15bbbc63ad8c4dbea72a054dffeb1d6a20557daa" =>
         "Zapper@semisol.dev"
       case "738ea36ef74b2ac80bfb3887b40637c7dcdf74ea6eed73c718b7193313b90f9b" =>
