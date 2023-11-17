@@ -75,7 +75,7 @@ class Controller @Inject() (cc: MessagesControllerComponents)
           logger.info(s"Finding events for $start to $end")
           findEvents(start, end)
         }
-        .map(_ => ())
+        .map(_ => logger.info("Finished reindex"))
     }
   }
 
