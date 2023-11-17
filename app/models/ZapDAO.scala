@@ -102,7 +102,7 @@ case class ZapDAO()(implicit
   }
 
   def calcZapStats(): Future[ZapStats] = {
-    val maxZap = MilliSatoshis(Bitcoins(1))
+    val maxZap = MilliSatoshis(Bitcoins(0.005))
     val fakers = Seq(
       SchnorrPublicKey(
         "0827e302f2e1addb2ab7f56a15bbbc63ad8c4dbea72a054dffeb1d6a20557daa"),
@@ -144,7 +144,7 @@ case class ZapDAO()(implicit
       uniqueAuthors <- uniqueAuthors
       zapsByAuthor <- zapsByAuthorA
       zapsByAuthorSorted = zapsByAuthor
-        .filter(_._2 > MilliSatoshis(Satoshis(10_000_000)))
+//        .filter(_._2 > MilliSatoshis(Satoshis(10_000_000)))
         .filter(_._2.toSatoshis.toLong % 1_000_000 != 0)
         .sortBy(_._2)(Ordering[MilliSatoshis])
         .reverse
