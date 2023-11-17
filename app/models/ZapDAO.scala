@@ -107,7 +107,10 @@ case class ZapDAO()(implicit
       SchnorrPublicKey(
         "0827e302f2e1addb2ab7f56a15bbbc63ad8c4dbea72a054dffeb1d6a20557daa"),
       SchnorrPublicKey(
-        "738ea36ef74b2ac80bfb3887b40637c7dcdf74ea6eed73c718b7193313b90f9b")
+        "738ea36ef74b2ac80bfb3887b40637c7dcdf74ea6eed73c718b7193313b90f9b"),
+      SchnorrPublicKey(
+        "3b1b67e5f7b815fcb07f5939fc04b050f18331407b2388fa1fcef11a2bed15a0"
+      )
     )
 
     val valid = table
