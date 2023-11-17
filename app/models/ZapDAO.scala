@@ -143,13 +143,18 @@ case class ZapDAO()(implicit
       uniqueSenders <- uniqueSenders
       uniqueAuthors <- uniqueAuthors
       zapsByAuthor <- zapsByAuthorA
+      zapsByAuthorSorted = zapsByAuthor
+        .filter(_._2 > MilliSatoshis.zero)
+        .filter(_._2.toSatoshis.toLong % 1_000_000 != 0)
+        .sortBy(_._2)(Ordering[MilliSatoshis])
+        .reverse
     } yield ZapStats(total,
                      count,
                      uniqueNodeIds,
                      uniqueReceivers,
                      uniqueSenders,
                      uniqueAuthors,
-                     zapsByAuthor.sortBy(_._2)(Ordering[MilliSatoshis].reverse))
+                     zapsByAuthorSorted)
 
     safeDatabase.run(action)
   }
