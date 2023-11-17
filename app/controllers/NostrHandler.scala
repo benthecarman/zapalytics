@@ -115,7 +115,7 @@ trait NostrHandler extends Logging { self: Controller =>
     }
 
     val fs = clients.map { client =>
-      for {
+      val f = for {
         _ <- client.start()
         _ <- client.subscribe(filter)
         _ = logger.info(s"Subscribed to ${client.url}")
@@ -125,6 +125,8 @@ trait NostrHandler extends Logging { self: Controller =>
           maxTries = 500)
         _ <- Future.fromTry(Try(client.stop())).flatten.recover(_ => ())
       } yield ()
+
+      f.recover(_ => ())
     }
 
     Future.sequence(fs).map(_ => logger.info("Done finding events"))
