@@ -54,9 +54,15 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   private def doReindex(): Future[Unit] = {
     logger.info("Starting reindex")
     val missingF = for {
-      _ <- getZapUsers()
-      _ <- getZapSenders()
-      _ <- getZapsWithMissingSenders()
+      _ <- getZapUsers().recover { case x: Throwable =>
+        logger.error("Failed to get zap users", x)
+      }
+      _ <- getZapSenders().recover { case x: Throwable =>
+        logger.error("Failed to get zap senders", x)
+      }
+      _ <- getZapsWithMissingSenders().recover { case x: Throwable =>
+        logger.error("Failed to get zaps with missing senders", x)
+      }
     } yield ()
 
     missingF.flatMap { _ =>
