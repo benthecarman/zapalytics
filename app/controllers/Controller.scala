@@ -67,7 +67,7 @@ class Controller @Inject() (cc: MessagesControllerComponents)
 
     missingF.flatMap { _ =>
       val interval = 86400
-      val times = 1672574400L.to(TimeUtil.currentEpochSecond).by(interval)
+      val times = 1682467200L.to(TimeUtil.currentEpochSecond).by(interval)
 
       FutureUtil
         .foldLeftAsync((), times) { (_, start) =>
