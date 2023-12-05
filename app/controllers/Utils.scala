@@ -13,6 +13,7 @@ object Utils {
       case "ln.tips"               => true
       case "stacker.news"          => true
       case "strike.army"           => true
+      case "strike.me"             => true
       case "coincorner.io"         => true
       case "zbd.gg"                => true
       case "fountain.fm"           => true
@@ -33,6 +34,7 @@ object Utils {
       case "noah.me"               => true
       case "satsback.com"          => true
       case "pay.bbw.sv"            => true
+      case "blink.sv"              => true
       case _                       => false
     }
   }
@@ -78,8 +80,6 @@ object Utils {
         true
       case "aa55a479ad6934d0fd78f3dbd88515cd1ca0d7a110812e711380d59df7598935" => // bitcoin jungle
         true
-      case "8fe53b37518e3dbe9bab26d912292001d8b882de9456b7b08b615f912dc8bf4a" => // bitcoin beach wallet
-        true
       case "6a69b9a70c28857e14fd429efabea77cb65ab6dfee3ec79b32ab1c4e7c02a232" => // zebedee
         true
       case "fcd720c38d9ee337188f47aac845dcd8f590ccdb4a928b76dde18187b4c9d37d" => // ln.tips
@@ -98,7 +98,15 @@ object Utils {
         true
       case "2a5e4937b58413c0d5ff428b1ff1366a231ada4a6bf3ed054b7ead046d567c80" => // kollider
         true
+      case "8b7cd4981e30ed2dd6b5ef1f816763453b282b3e44f41ef2a3da77ff5ef8d141" => // strike.me
+        true
+      case "7f890178d2cd2621c5313048927e2b5d7b8f69db5b5e91a64be1be28dc01b013" => // coinos.io
+        true
       case "f58fcf63564c90b6c4ef395e233f75eb78767e91d952c5e3dfefeb22a03ea980" => // satsback.com
+        true
+      case "8fe53b37518e3dbe9bab26d912292001d8b882de9456b7b08b615f912dc8bf4a" => // blink
+        true
+      case "b6dcdddf86675287d1a4e8620d92aa905c258d850bf8cc923d39df1edfee5ee7" => // geyser.fund
         true
       case _ => false
     }
@@ -106,6 +114,14 @@ object Utils {
 
   def getAuthorName(key: SchnorrPublicKey): String = {
     key.hex match {
+      case "8fe53b37518e3dbe9bab26d912292001d8b882de9456b7b08b615f912dc8bf4a" =>
+        "Blink"
+      case "8b7cd4981e30ed2dd6b5ef1f816763453b282b3e44f41ef2a3da77ff5ef8d141" =>
+        "Strike"
+      case "7f890178d2cd2621c5313048927e2b5d7b8f69db5b5e91a64be1be28dc01b013" =>
+        "Coinos"
+      case "b6dcdddf86675287d1a4e8620d92aa905c258d850bf8cc923d39df1edfee5ee7" =>
+        "Geyser.fund"
       case "1743bcc6d80fc182ced1971853769ff9373a2707aad744b24e8577c6dae83fd0" =>
         "ZapMe.tips"
       case "abd32a8bc530142cc04a23f9c07239dbbc6664f4f7eeceb8092c0e3530f94e9d" =>
@@ -126,8 +142,6 @@ object Utils {
         "Fountain"
       case "aa55a479ad6934d0fd78f3dbd88515cd1ca0d7a110812e711380d59df7598935" =>
         "Bitcoin Jungle"
-      case "8fe53b37518e3dbe9bab26d912292001d8b882de9456b7b08b615f912dc8bf4a" =>
-        "Bitcoin Beach Wallet"
       case "6a69b9a70c28857e14fd429efabea77cb65ab6dfee3ec79b32ab1c4e7c02a232" =>
         "Zebedee"
       case "fcd720c38d9ee337188f47aac845dcd8f590ccdb4a928b76dde18187b4c9d37d" =>
