@@ -25,8 +25,8 @@ object Utils {
       case "current.ninja"         => true
       case "current.red"           => true
       case "current.tips"          => true
-      case "nodeless.io"           => true
       case "current.fyi"           => true
+      case "nodeless.io"           => true
       case "nostrplebs.com"        => true
       case "bitrefill.me"          => true
       case "cashu.me"              => true

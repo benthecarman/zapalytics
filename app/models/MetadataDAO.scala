@@ -116,7 +116,13 @@ case class MetadataDAO()(implicit
       }
 
       val domainCounts = pruned
-        .groupBy(identity)
+        // group all the current domains together
+        .groupBy {
+          case "getcurrent.io" | "current.ninja" | "current.red" |
+              "current.tips" | "current.fyi" =>
+            "getcurrent.io"
+          case x => x
+        }
         .view
         .mapValues(_.size)
         .toSeq
