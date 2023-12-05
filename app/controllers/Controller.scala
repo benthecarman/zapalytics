@@ -103,6 +103,17 @@ class Controller @Inject() (cc: MessagesControllerComponents)
     }
   }
 
+  def metadataStats(): Action[AnyContent] = {
+    Action.async { implicit request: MessagesRequest[AnyContent] =>
+      metadataDAO.calcMetadataStats().map { stats =>
+        val json = Json.obj(stats.domainCounts.map { case (k, v) =>
+          k -> v
+        }: _*)
+        Ok(json)
+      }
+    }
+  }
+
   private def calcNextReindexTime(): Instant = {
     val now = Instant.now()
     val eightUTCToday = now
