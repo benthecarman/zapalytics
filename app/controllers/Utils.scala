@@ -33,6 +33,7 @@ object Utils {
       case "coinos.io"             => true
       case "noah.me"               => true
       case "primal.net"            => true
+      case "lifpay.me"            => true
       case "satsback.com"          => true
       case "pay.bbw.sv"            => true
       case "blink.sv"              => true
@@ -111,12 +112,16 @@ object Utils {
         true
       case "f81611363554b64306467234d7396ec88455707633f54738f6c4683535098cd3" => // primal.net
         true
+      case "8a3f4b09cc1dcf9722fdc423e1320bad07a77183b3c0db7dad42de9a75c64220" => // lifpay.me
+        true
       case _ => false
     }
   }
 
   def getAuthorName(key: SchnorrPublicKey): String = {
     key.hex match {
+      case "8a3f4b09cc1dcf9722fdc423e1320bad07a77183b3c0db7dad42de9a75c64220" =>
+        "lifpay.me"
       case "f81611363554b64306467234d7396ec88455707633f54738f6c4683535098cd3" =>
         "Primal"
       case "910bf554c8cb3384798d5b1402b79810a44b304c5c8fe1b27d396223e5a04f0e" =>
