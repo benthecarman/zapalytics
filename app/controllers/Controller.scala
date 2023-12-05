@@ -5,7 +5,7 @@ import config.ZapalyticsAppConfig
 import grizzled.slf4j.Logging
 import models._
 import org.bitcoins.core.util.{FutureUtil, TimeUtil}
-import play.api.libs.json.Json
+import play.api.libs.json._
 import play.api.mvc._
 
 import java.time.Instant
@@ -95,9 +95,9 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   def zapsByEventAuthor(): Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
       zapDAO.calcZapStats().map { stats =>
-        val json = Json.obj(stats.zapsByAuthor.map { case (k, v) =>
-          k.hex -> v.toSatoshis.toLong
-        }: _*)
+        val json = JsObject(stats.zapsByAuthor.map { case (k, v) =>
+          k.hex -> JsNumber(v.toSatoshis.toLong)
+        })
         Ok(json)
       }
     }
@@ -106,9 +106,9 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   def metadataStats(): Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
       metadataDAO.calcMetadataStats().map { stats =>
-        val json = Json.obj(stats.domainCounts.map { case (k, v) =>
-          k -> v
-        }: _*)
+        val json = JsObject(stats.domainCounts.map { case (k, v) =>
+          k -> JsNumber(v)
+        })
         Ok(json)
       }
     }

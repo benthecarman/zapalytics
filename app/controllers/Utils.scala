@@ -33,7 +33,7 @@ object Utils {
       case "coinos.io"             => true
       case "noah.me"               => true
       case "primal.net"            => true
-      case "lifpay.me"            => true
+      case "lifpay.me"             => true
       case "satsback.com"          => true
       case "pay.bbw.sv"            => true
       case "blink.sv"              => true
