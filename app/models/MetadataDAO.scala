@@ -93,7 +93,29 @@ case class MetadataDAO()(implicit
         s.split('@').lastOption
       }
 
-      val domainCounts = domains
+      // filter out people being dumb
+      val pruned = domains.filterNot {
+        case "gmail.com"            => true
+        case "protonmail.com"       => true
+        case "yahoo.com"            => true
+        case "hotmail.com"          => true
+        case "live.com"             => true
+        case "me.com"               => true
+        case "b.com"                => true
+        case "filmweb.pl"           => true
+        case "btcpay.filmweb.pl"    => true
+        case "walletofsaitoshi.com" => true
+        case "getalbey.com"         => true
+        case "getaby.com"           => true
+        case "getalby.co"           => true
+        case "getalby.c"            => true
+        case "getalby.io"           => true
+        case "ably.com"             => true
+        case "alby.com"             => true
+        case str                    => !str.contains(".") // no tld
+      }
+
+      val domainCounts = pruned
         .groupBy(identity)
         .view
         .mapValues(_.size)
