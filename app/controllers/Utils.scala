@@ -30,6 +30,7 @@ object Utils {
       case "vida.page"             => true
       case "pay.bitcoinjungle.app" => true
       case "bottlepay.me"          => true
+      case "zap.stream"            => true
       case "coinos.io"             => true
       case "noah.me"               => true
       case "primal.net"            => true
@@ -114,12 +115,16 @@ object Utils {
         true
       case "8a3f4b09cc1dcf9722fdc423e1320bad07a77183b3c0db7dad42de9a75c64220" => // lifpay.me
         true
+      case "cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5" => // zap.stream
+        true
       case _ => false
     }
   }
 
   def getAuthorName(key: SchnorrPublicKey): String = {
     key.hex match {
+      case "cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5" => // zap.stream
+        "zap.stream"
       case "8a3f4b09cc1dcf9722fdc423e1320bad07a77183b3c0db7dad42de9a75c64220" =>
         "lifpay.me"
       case "f81611363554b64306467234d7396ec88455707633f54738f6c4683535098cd3" =>
