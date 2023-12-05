@@ -114,6 +114,8 @@ object Utils {
 
   def getAuthorName(key: SchnorrPublicKey): String = {
     key.hex match {
+      case "910bf554c8cb3384798d5b1402b79810a44b304c5c8fe1b27d396223e5a04f0e" =>
+        "D++"
       case "8fe53b37518e3dbe9bab26d912292001d8b882de9456b7b08b615f912dc8bf4a" =>
         "Blink"
       case "8b7cd4981e30ed2dd6b5ef1f816763453b282b3e44f41ef2a3da77ff5ef8d141" =>
