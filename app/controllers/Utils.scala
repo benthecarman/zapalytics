@@ -16,6 +16,7 @@ object Utils {
       case "strike.me"             => true
       case "coincorner.io"         => true
       case "zbd.gg"                => true
+      case "lawallet.ar"           => true
       case "plebai.com"            => true
       case "fountain.fm"           => true
       case "legend.lnbits.com"     => true
@@ -80,6 +81,8 @@ object Utils {
     author.hex match {
       case "be1d89794bf92de5dd64c1e60f6a2c70c140abac9932418fee30c5c637fe9479" => // wallet of satoshi
         true
+      case "e17feb5f2cf83546bcf7fd9c8237b05275be958bd521543c2285ffc6c2d654b3" => // lawallet.ar
+        true
       case "79f00d3f5a19ec806189fcab03c1be4ff81d18ee4f653c88fac41fe03570f432" => // alby
         true
       case "c7063ccd7e9adc0ddd4b77c6bfabffc8399b41e24de3a668a6ab62ede2c8aabd" => // current
@@ -130,6 +133,8 @@ object Utils {
     key.hex match {
       case "cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5" => // zap.stream
         "zap.stream"
+      case "e17feb5f2cf83546bcf7fd9c8237b05275be958bd521543c2285ffc6c2d654b3" => // lawallet.ar
+        "lawallet.ar"
       case "8a3f4b09cc1dcf9722fdc423e1320bad07a77183b3c0db7dad42de9a75c64220" =>
         "lifpay.me"
       case "f81611363554b64306467234d7396ec88455707633f54738f6c4683535098cd3" =>
