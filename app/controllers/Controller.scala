@@ -34,6 +34,9 @@ class Controller @Inject() (cc: MessagesControllerComponents)
   val zapDAO: ZapDAO = ZapDAO()
   val metadataDAO: MetadataDAO = MetadataDAO()
 
+  private var zapsByEventAuthorCache: Option[ZapStats] = None
+  private var metadataStatsCache: Option[MetadataStats] = None
+
   def notFound(route: String): Action[AnyContent] = {
     Action { implicit request: MessagesRequest[AnyContent] =>
       NotFound(views.html.notFound(route))
@@ -80,6 +83,21 @@ class Controller @Inject() (cc: MessagesControllerComponents)
     }
   }
 
+  private def doCacheUpdate(): Future[Unit] = {
+    logger.info("Updating cache")
+    val zapStatsF = zapDAO.calcZapStats()
+    val metadataStatsF = metadataDAO.calcMetadataStats()
+
+    for {
+      zapStats <- zapStatsF
+      metadataStats <- metadataStatsF
+    } yield {
+      zapsByEventAuthorCache = Some(zapStats)
+      metadataStatsCache = Some(metadataStats)
+      logger.info("Cache updated!")
+    }
+  }
+
   def reindex(key: String): Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
       if (key != config.adminKey) {
@@ -92,9 +110,25 @@ class Controller @Inject() (cc: MessagesControllerComponents)
     }
   }
 
+  def updateCache(key: String): Action[AnyContent] = {
+    Action.async { implicit request: MessagesRequest[AnyContent] =>
+      if (key != config.adminKey) {
+        Future.successful(Forbidden("Invalid admin key"))
+      } else
+        startF.map { _ =>
+          val _ = doCacheUpdate()
+          Ok("Reindexing started")
+        }
+    }
+  }
+
   def zapsByEventAuthor(): Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
-      zapDAO.calcZapStats().map { stats =>
+      val statsF = zapsByEventAuthorCache match {
+        case Some(stats) => Future.successful(stats)
+        case None        => zapDAO.calcZapStats()
+      }
+      statsF.map { stats =>
         val json = JsObject(stats.zapsByAuthor.map { case (k, v) =>
           k.hex -> JsNumber(v.toSatoshis.toLong)
         })
@@ -105,7 +139,11 @@ class Controller @Inject() (cc: MessagesControllerComponents)
 
   def metadataStats(): Action[AnyContent] = {
     Action.async { implicit request: MessagesRequest[AnyContent] =>
-      metadataDAO.calcMetadataStats().map { stats =>
+      val statsF = metadataStatsCache match {
+        case Some(stats) => Future.successful(stats)
+        case None        => metadataDAO.calcMetadataStats()
+      }
+      statsF.map { stats =>
         val json = JsObject(stats.domainCounts.map { case (k, v) =>
           k -> JsNumber(v)
         })
@@ -136,12 +174,17 @@ class Controller @Inject() (cc: MessagesControllerComponents)
       .milliseconds
   }
 
-  // every day reindex the data
   startF.map { _ =>
+    // every day reindex the data
     val initDelay = durationUntilNextReindex()
     val interval = 1.day
     system.scheduler.scheduleAtFixedRate(initDelay, interval) { () =>
       val _ = doReindex()
+    }
+
+    // every hour refresh the cache
+    system.scheduler.scheduleAtFixedRate(0.seconds, 1.hour) { () =>
+      val _ = doCacheUpdate()
     }
   }
 }
