@@ -85,9 +85,9 @@ class Controller @Inject() (cc: MessagesControllerComponents)
       if (key != config.adminKey) {
         Future.successful(Forbidden("Invalid admin key"))
       } else
-        startF.flatMap { _ =>
+        startF.map { _ =>
           val _ = doReindex()
-          Future.successful(Ok("Reindexing started"))
+          Ok("Reindexing started")
         }
     }
   }
