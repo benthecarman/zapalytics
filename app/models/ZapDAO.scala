@@ -113,6 +113,9 @@ case class ZapDAO()(implicit
       ),
       SchnorrPublicKey(
         "910bf554c8cb3384798d5b1402b79810a44b304c5c8fe1b27d396223e5a04f0e"
+      ),
+      SchnorrPublicKey(
+        "beeb48407a6f087ea8f76dc384a5d88c67ced9bd9fb0cdba90930210df3d92e7"
       )
     )
 

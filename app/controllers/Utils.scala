@@ -81,6 +81,8 @@ object Utils {
     author.hex match {
       case "be1d89794bf92de5dd64c1e60f6a2c70c140abac9932418fee30c5c637fe9479" => // wallet of satoshi
         true
+      case "b866ce76be5b826695980248322b8df4c381608ffa5a5b47c4f3abe0d8f767a5" => // Fountain Boost Bot
+        true
       case "e17feb5f2cf83546bcf7fd9c8237b05275be958bd521543c2285ffc6c2d654b3" => // lawallet.ar
         true
       case "79f00d3f5a19ec806189fcab03c1be4ff81d18ee4f653c88fac41fe03570f432" => // alby
@@ -131,6 +133,8 @@ object Utils {
 
   def getAuthorName(key: SchnorrPublicKey): String = {
     key.hex match {
+      case "b866ce76be5b826695980248322b8df4c381608ffa5a5b47c4f3abe0d8f767a5" => // Fountain Boost Bot
+        "Fountain Boost Bot"
       case "cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5" => // zap.stream
         "zap.stream"
       case "e17feb5f2cf83546bcf7fd9c8237b05275be958bd521543c2285ffc6c2d654b3" => // lawallet.ar
