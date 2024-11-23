@@ -117,7 +117,7 @@ class Controller @Inject() (cc: MessagesControllerComponents)
       } else
         startF.map { _ =>
           val _ = doCacheUpdate()
-          Ok("Reindexing started")
+          Ok("Cache update started")
         }
     }
   }
